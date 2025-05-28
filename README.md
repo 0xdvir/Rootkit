@@ -8,9 +8,9 @@ A simple and educational rootkit designed for modern Linux kernels.
 
 - **Network Backdoor**  
   Filters network packets for magic payloads to trigger commands or actions.
-- **SO Injector**
+- **SO Injector**  
   Receives a shared object over the network and injects it into a target process.
-- **Binary Loader**
+- **Binary Loader**  
   Executes ELF binaries received via the network.
 - **Keylogger**  
   Captures and logs keyboard input.
