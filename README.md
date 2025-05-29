@@ -37,4 +37,7 @@ The repository includes example userspace helpers for:
 ## Usage
 
 - Example install and uninstall scripts (`install.sh` and `uninstall.sh`) demonstrate how to deploy the rootkit, using innocuous file names for stealth.
+- SO and executable binaries should be sent to a port defined in `userspace/config.h` (9000 as default) after a corresponding "magic" payload is sent.
+- The keylogger output can be retrieved by injecting `userspace/build/keylogger_sender.so` remotely while listening on a predefined port (4443 as default)
 - A controller script (`rootkitctl.py`, written in Python 3) is provided to run on the attacker’s machine and interact with the rootkit’s backdoor functionality.
+- Everything is configurable in `config.h` and `userspace/config.h`.
