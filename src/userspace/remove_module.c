@@ -40,7 +40,6 @@ int main(int argc, char **argv)
     }
 
     unlink(REC_FILE);
-    unlink(REV_SHELL_FILE);
 
     // Remove the kernel module
     unlink(module_path);

